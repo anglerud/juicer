@@ -1,126 +1,24 @@
 use anyhow::Result;
-use crossterm::{
-    event::{self, Event::Key, KeyCode::Char},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
-use ratatui::{
-    layout::{Constraint, Direction, Layout},
-    prelude::{CrosstermBackend, Frame, Terminal},
-    style::{Color, Style},
-    widgets::{Block, Borders, Paragraph},
-};
-use tui_textarea::{Input, TextArea};
 
-struct App {
-    counter: i64,
-    should_quit: bool,
-}
+// IDEA:
+// So, a Recipe has
+//   Ingredient
+//     Name
+//     OR just enum? with name?
+//   or
+//   Component
+//     Ingredient
+//     Proportion
+//
 
-fn startup() -> Result<()> {
-    enable_raw_mode()?;
-    execute!(std::io::stderr(), EnterAlternateScreen)?; Ok(())
-}
-
-fn shutdown() -> Result<()> {
-    execute!(std::io::stderr(), LeaveAlternateScreen)?;
-    disable_raw_mode()?;
-    Ok(())
-}
-
-fn render_counter(app: &App) -> String {
-    format!("Counter: {}", app.counter)
-}
-
-fn validate_input(textarea: &mut TextArea) -> bool {
-    if let Err(err) = textarea.lines()[0].parse::<f64>() {
-        textarea.set_style(Style::default().fg(Color::LightRed));
-        textarea.set_block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(format!("ERROR: {}", err)),
-        );
-        false
-    } else {
-        textarea.set_style(Style::default().fg(Color::LightGreen));
-        textarea.set_block(Block::default().borders(Borders::ALL).title("OK"));
-        true
-    }
-}
-
-// XXX: This is very custom right now
-fn ui(app: &App, f: &mut Frame) {
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(vec![
-                Constraint::Percentage(50),
-                Constraint::Percentage(50),
-        ]);
-            // [Constraint::Length(3), Constraint::Min(1)].as_slice());
-    let layout_chunks = layout.split(f.size());
-
-    let input_layout = Layout::default().constraints([Constraint::Length(3),
-        Constraint::Min(1)].as_slice());
-    let input_layout_chunks = input_layout.split(layout_chunks[0]);
-
-    let mut textarea = TextArea::default();
-    textarea.set_cursor_line_style(Style::default());
-    textarea.set_placeholder_text("Enter a valid float (e.g. 1.56)");
-
-    // result (bool) not used
-    validate_input(&mut textarea);
-
-    let textarea_widget = textarea.widget();
-    f.render_widget(textarea_widget, input_layout_chunks[0]);
-    f.render_widget(
-        Paragraph::new(render_counter(&app)), layout_chunks[1]
-    );
-}
-
-fn update(app: &mut App) -> Result<()> {
-    if event::poll(std::time::Duration::from_millis(250))? {
-        if let Key(key) = event::read()? {
-            if key.kind == event::KeyEventKind::Press {
-                match key.code {
-                    Char('j') => app.counter += 1,
-                    Char('k') => app.counter -= 1,
-                    Char('q') => app.should_quit = true,
-                    _ => {}
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-fn run() -> Result<()> {
-    // ratatui terminal
-    let mut t = Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
-
-    // application state
-    let mut app = App {
-        counter: 0,
-        should_quit: false,
-    };
-
-    while !app.should_quit {
-        // application render
-        t.draw(|f| {
-            ui(&app, f);
-        })?;
-
-        // application update
-        update(&mut app)?;
-    }
-
-    Ok(())
+#[derive(Debug, Eq, PartialEq, Hash)]
+enum JuiceFields {
+    LemonPeel,
+    Water,
+    CitricAcid,
 }
 
 fn main() -> Result<()> {
-    startup()?;
-    let status = run();
-    shutdown()?;
-    status?;
     Ok(())
 }
 
