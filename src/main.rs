@@ -65,26 +65,22 @@ impl LemonSuperJuice {
 
 mod lemon_super_juice_tests {
     use super::*;
+    use float_cmp::approx_eq;
 
     #[test]
     fn test_from_total_volume() {
         let one_litre_juice = LemonSuperJuice::new_from_total_volume(1000.0);
-        // Amount of citric acid && lemon peel: 1000 / 16.6 = 60.24096
-        // FIXME: OK, need to be able ot do less precise comparisons
-        //        how do we do this in rust?
-        assert_eq!(one_litre_juice.water_ml, 939.75903);
-        assert_eq!(one_litre_juice.lemon_peel_g, 60.240963);
-        assert_eq!(one_litre_juice.citric_acid_g, 60.240963);
+        assert!(approx_eq!(f32, one_litre_juice.water_ml, 939.8, epsilon=0.1));
+        assert!(approx_eq!(f32, one_litre_juice.lemon_peel_g, 60.2, epsilon=0.1));
+        assert!(approx_eq!(f32, one_litre_juice.citric_acid_g, 60.2, epsilon=0.1));
     }
     // XXX: Need to return a result? What if we provide a negative volume etc?
 
     #[test]
     fn test_from_lemon_peel_weight() {
         let juice = LemonSuperJuice::new_from_lemon_peel_weight(10.0);
-        assert_eq!(juice.lemon_peel_g, 10.0);
-        // OK, now how do I do floating point asserts? Is there a "within X", or do I
-        // have to do that myself?
-        assert_eq!(juice.citric_acid_g, 10.0);
-        assert_eq!(juice.water_ml, 166.6);
+        assert!(approx_eq!(f32, juice.lemon_peel_g, 10.0, epsilon=0.1));
+        assert!(approx_eq!(f32, juice.citric_acid_g, 10.0, epsilon=0.1));
+        assert!(approx_eq!(f32, juice.water_ml, 166.6, epsilon=0.1));
     }
 }
